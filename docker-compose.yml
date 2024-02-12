@@ -24,6 +24,21 @@ services:
       - FLASK_ENV=development
     command: flask run -h 0.0.0.0
 
+  microblog:
+    build: .
+    ports:
+      - "5001:5000"
+    networks:
+      - identinet
+    volumes:
+      - "./app:/app"
+    environment:
+      - FLASK_APP=/app/identidock.py
+      - FLASK_ENV=development
+    command: flask run -h 0.0.0.0
+    depends_on:
+      - database    
+
   app:
     image: quay.io/hedgedoc/hedgedoc:1.9.9
     environment:
@@ -86,7 +101,7 @@ services:
       - 5601:5601
     networks:
       - logging-network
-
+      
 volumes:
   database:
   uploads:
