@@ -1,0 +1,8 @@
+version: '3.7'
+services:
+  whoami:
+    image: traefik/whoami
+    ports:
+      - 9999:80
+    deploy:
+      replicas: 5
