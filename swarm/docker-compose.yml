@@ -1,8 +1,22 @@
 version: '3.7'
 services:
+  reverse-proxy:
+    image: traefik:v2.3
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   whoami:
     image: traefik/whoami
-    ports:
-      - 9999:80
+    labels:
+      - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
     deploy:
       replicas: 5
+
+networks:
+  front-tier:
+  back-tier:

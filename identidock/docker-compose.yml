@@ -1,6 +1,39 @@
 version: '3'
 
 services:
+  reverse-proxy:
+    image: "traefik:v2.3"
+    container_name: "traefik"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - target: 80
+        published: 80
+        mode: host
+      - target: 8080
+        published: 8080
+        mode: host
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  whoami:
+    image: "traefik/whoami"
+    deploy:
+      replicas: 5
+      labels:
+        - traefik.http.routers.whoami-service.rule=Host(`example.com`)
+        - traefik.http.services.whoami-service.loadbalancer.server.port=80
+
   database:
     image: postgres:13.4-alpine
     environment:
@@ -55,8 +88,12 @@ services:
 
   dnmonster:
     image: amouat/dnmonster:1.0
+    labels:
+      - "traefik.http.routers.dnmonster.rule=Host(`monster.localhost`)"
+      - "traefik.http.routers.dnmonster.entrypoints=web"
     networks:
       - identinet
+      - traefik-net
 
   redis:
     image: redis
@@ -111,3 +148,5 @@ networks:
     driver: bridge
   logging-network:
     driver: bridge
+  traefik-net:
+    external: true
